@@ -26,7 +26,7 @@ def hebbian_update(samples, weights):
     assert samples.dtype == tf.bool
 
     # Maintain an unbiased running average.
-    counter = tf.get_variable(weights.name + '_hebb_counter',
+    counter = tf.get_variable(weights.op.name + '/hebb_counter',
                               shape=(),
                               dtype=tf.int32,
                               initializer=tf.zeros_initializer(),
@@ -38,4 +38,5 @@ def hebbian_update(samples, weights):
     numerics = 2*tf.cast(samples, tf.float32) - 1
     outer = tf.matmul(tf.transpose(numerics), numerics) / new_count
     return tf.group(tf.assign_add(weights, rate*(outer-weights)),
-                    tf.assign_add(counter, tf.shape(samples)[0]))
+                    tf.assign_add(counter, tf.shape(samples)[0]),
+                    name='hebb')
