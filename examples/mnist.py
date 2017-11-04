@@ -64,18 +64,9 @@ def classify(network, images):
     Returns:
       A batch of one-hot vectors.
     """
-    init_labels = tf.zeros((tf.shape(images)[0], 10), dtype=tf.bool)
-    cur_outs = tf.concat((tf.greater_equal(images, 0.5), init_labels), axis=-1)
-    for _ in range(FORWARD_ITERS):
-        cur_outs = network.step(cur_outs)
-    labels_out = tf.cast(cur_outs[:, -10:], tf.float32)
-
-    # Add noise to break symmetry if the network predicted
-    # multiple possibilities.
-    noisy_out = labels_out + tf.random_uniform(tf.shape(labels_out), maxval=0.1)
-
-    maxes = tf.argmax(noisy_out, axis=-1)
-    return tf.one_hot(maxes, 10)
+    numeric_vec = tf.cast(tf.greater_equal(images, 0.5), tf.float32)*2 - 1
+    logits = tf.matmul(numeric_vec, network.weights[:28*28, -10:])
+    return tf.one_hot(tf.argmax(logits, axis=-1), 10)
 
 if __name__ == '__main__':
     main()
