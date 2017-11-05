@@ -48,6 +48,29 @@ def covariance_update(samples, weights, thresholds):
                       tf.expand_dims(new_thresh, axis=0))
     return tf.group(update_second, tf.assign(weights, new_second - outer))
 
+def extended_storkey_update(sample, weights):
+    """
+    Create an Op that performs a step of the Extended
+    Storkey Learning Rule.
+
+    Args:
+      sample: a 1-D sample Tensor of dtype tf.bool.
+      weights: the weight matrix to update.
+
+    Returns:
+      An Op that updates the weights based on the sample.
+    """
+    scale = 1 / int(weights.get_shape()[0])
+    numerics = 2*tf.cast(sample, weights.dtype) - 1
+    row_sample = tf.expand_dims(numerics, axis=0)
+    row_h = tf.matmul(row_sample, weights)
+
+    pos_term = (tf.matmul(tf.transpose(row_sample), row_sample) +
+                tf.matmul(tf.transpose(row_h), row_h))
+    neg_term = (tf.matmul(tf.transpose(row_sample), row_h) +
+                tf.matmul(tf.transpose(row_h), row_sample))
+    return tf.assign_add(weights, scale * (pos_term - neg_term))
+
 def _second_moment_update(samples, weights, mask_diag=True):
     """
     Get an Op to do an uncentered second-moment update.
