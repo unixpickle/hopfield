@@ -7,7 +7,7 @@ we feed the network augmented vectors containing both the
 image and a one-hot vector representing the class.
 """
 
-from hopfield import Network, hebbian_update
+from hopfield import Network, covariance_update
 import numpy as np
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
@@ -36,7 +36,7 @@ def train(sess, network, dataset):
     images_ph = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 28*28))
     labels_ph = tf.placeholder(tf.bool, shape=(BATCH_SIZE, 10))
     joined = tf.concat((tf.greater_equal(images_ph, 0.5), labels_ph), axis=-1)
-    update = hebbian_update(joined, network.weights)
+    update = covariance_update(joined, network.weights, network.thresholds)
     sess.run(tf.global_variables_initializer())
     for i in range(0, len(dataset.images), BATCH_SIZE):
         images = dataset.images[i : i+BATCH_SIZE]
@@ -65,7 +65,8 @@ def classify(network, images):
       A batch of one-hot vectors.
     """
     numeric_vec = tf.cast(tf.greater_equal(images, 0.5), tf.float32)*2 - 1
-    logits = tf.matmul(numeric_vec, network.weights[:28*28, -10:])
+    thresholds = network.thresholds[-10:]
+    logits = tf.matmul(numeric_vec, network.weights[:28*28, -10:]) - thresholds
     return tf.one_hot(tf.argmax(logits, axis=-1), 10)
 
 if __name__ == '__main__':
