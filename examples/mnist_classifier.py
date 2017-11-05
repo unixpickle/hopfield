@@ -13,7 +13,6 @@ import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
 BATCH_SIZE = 100
-FORWARD_ITERS = 10
 MNIST = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 def main():
