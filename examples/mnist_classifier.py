@@ -7,12 +7,15 @@ we feed the network augmented vectors containing both the
 image and a one-hot vector representing the class.
 """
 
-from hopfield import Network, covariance_update
+import time
+
+from hopfield import Network, extended_storkey_update
 import numpy as np
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
 BATCH_SIZE = 100
+
 MNIST = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 def main():
@@ -25,22 +28,28 @@ def main():
         train(sess, network, MNIST.train)
         print('Evaluating...')
         print('Validation accuracy: ' + str(accuracy(sess, network, MNIST.validation)))
-        print('Testing accuracy: ' + str(accuracy(sess, network, MNIST.validation)))
+        print('Testing accuracy: ' + str(accuracy(sess, network, MNIST.test)))
         print('Training accuracy: ' + str(accuracy(sess, network, MNIST.train)))
 
 def train(sess, network, dataset):
     """
     Train the Hopfield network.
     """
-    images_ph = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 28*28))
-    labels_ph = tf.placeholder(tf.bool, shape=(BATCH_SIZE, 10))
-    joined = tf.concat((tf.greater_equal(images_ph, 0.5), labels_ph), axis=-1)
-    update = covariance_update(joined, network.weights, network.thresholds)
+    image_ph = tf.placeholder(tf.float32, shape=(28*28,))
+    label_ph = tf.placeholder(tf.bool, shape=(10,))
+    joined = tf.concat((tf.greater_equal(image_ph, 0.5), label_ph), axis=-1)
+    update = extended_storkey_update(joined, network.weights)
     sess.run(tf.global_variables_initializer())
-    for i in range(0, len(dataset.images), BATCH_SIZE):
-        images = dataset.images[i : i+BATCH_SIZE]
-        labels = dataset.labels[i : i+BATCH_SIZE]
-        sess.run(update, feed_dict={images_ph: images, labels_ph: labels})
+    i = 0
+    start_time = time.time()
+    for label, image in zip(dataset.labels, dataset.images):
+        sess.run(update, feed_dict={image_ph: image, label_ph: label})
+        i += 1
+        if i % 1000 == 0:
+            elapsed = time.time() - start_time
+            frac_done = i / len(dataset.images)
+            remaining = elapsed * (1-frac_done)/frac_done
+            print('Done %.1f%% (eta %.1f minutes)' % (100 * frac_done, remaining/60))
 
 def accuracy(sess, network, dataset):
     """
