@@ -42,8 +42,8 @@ def covariance_update(samples, weights, thresholds):
                                     trainable=False)
     update_second, new_second, rate = _second_moment_update(samples, second_moment,
                                                             mask_diag=False)
-    new_mean = tf.reduce_mean(tf.cast(samples, dtype=dtype)*2-1, axis=0)
-    new_thresh = tf.assign_add(thresholds, rate * (thresholds - new_mean))
+    new_mean = tf.negative(tf.reduce_mean(tf.cast(samples, dtype=dtype)*2-1, axis=0))
+    new_thresh = tf.assign_add(thresholds, rate * (new_mean - thresholds))
     outer = tf.matmul(tf.expand_dims(new_thresh, axis=1),
                       tf.expand_dims(new_thresh, axis=0))
     return tf.group(update_second, tf.assign(weights, new_second - outer))
