@@ -37,10 +37,12 @@ class TestHebb(unittest.TestCase):
                     sess.run(update_2, feed_dict={data_ph: [row]})
 
                 actual = _hebbs_rule(data)
-                print(sess.run(mat_2) - actual)
                 self.assertTrue(np.allclose(sess.run(mat_1), actual))
                 self.assertTrue(np.allclose(sess.run(mat_2), actual))
 
 def _hebbs_rule(data):
     signed_data = data.astype('float64')*2 - 1
-    return np.matmul(np.transpose(signed_data), signed_data) / len(data)
+    res = np.matmul(np.transpose(signed_data), signed_data) / len(data)
+    for i in range(len(res)):
+        res[i, i] = 0
+    return res

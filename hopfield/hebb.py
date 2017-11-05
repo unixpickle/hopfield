@@ -41,7 +41,10 @@ def hebbian_update(samples, weights):
     numerics = 2*tf.cast(samples, dtype) - 1
     outer = tf.matmul(tf.transpose(numerics), numerics) / new_count
 
-    with tf.control_dependencies([outer]):
-        return tf.group(tf.assign_add(weights, rate*(outer-weights)),
+    diag_mask = 1 - tf.diag(tf.ones((tf.shape(weights)[0],), dtype=dtype))
+    rate_mask = rate * diag_mask
+
+    with tf.control_dependencies([outer, rate_mask]):
+        return tf.group(tf.assign_add(weights, rate_mask*(outer-weights)),
                         tf.assign_add(counter, tf.shape(samples)[0]),
                         name='hebb')
