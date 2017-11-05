@@ -1,5 +1,5 @@
 """
-Test Hebbian training.
+Test update rules.
 """
 
 import unittest

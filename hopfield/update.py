@@ -1,5 +1,5 @@
 """
-Train Hopfield networks with Hebb's rule.
+Update rules for Hopfield networks.
 """
 
 import tensorflow as tf
